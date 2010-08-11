@@ -37,6 +37,8 @@ rule
       | QUESTION QUESTION { result = [ :zero_or_one, :min ] }
       | LC INTEGER RC { result = [ :exact, val[1].to_i ] }
       | LC INTEGER COMMA INTEGER RC { result = [ :range, val[1].to_i, val[3].to_i ] }
+      | LC INTEGER COMMA RC { result = [ :range, val[1], '' ] }
+      | LC INTEGER COMMA RC QUESTION { result = [ :min, :range, val[1], '' ] }
       | LC INTEGER COMMA INTEGER RC QUESTION { result = [ :min, :range, val[1].to_i, val[3].to_i ] }
       
 

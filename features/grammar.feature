@@ -20,6 +20,15 @@ Feature: Basic regex parsing
    When I parse the regex (foo+?)
    Then it should match "fooooooo"
 
+  Scenario: Parsing a simple text string
+   Given a context
+     And the prefix g as "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
+   When I parse the regex (foo{1,4}$)
+   Then it should match "foo"
+   Then it should match "fooooo"
+   Then it should not match "foooooo"
+   Then it should not match "fo"
+
   @chars
   Scenario: Parsing a simple text string
    Given a context
