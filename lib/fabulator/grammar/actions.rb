@@ -32,8 +32,8 @@ module Fabulator
           end
         end
 
-        function 'tokenize' do |ctx, args|
-        end
+#        function 'tokenize' do |ctx, args|
+#        end
       end
     end
   end

@@ -47,6 +47,14 @@ Feature: Basic regex parsing
    Then it should match "fo0"
     And it should not match "0l0"
 
+  Scenario: Parsing a simple text string
+   Given a context
+     And the prefix g as "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
+   When I parse the regex (^[^0-9].[0-9]$)
+   Then it should match "fo0"
+    And it should not match "0l0"
+    And it should not match "00"
+
   @chars
   Scenario: Parsing a simple text string
    Given a context

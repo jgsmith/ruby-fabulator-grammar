@@ -15,6 +15,9 @@ are added that might not be supportable by pure Ruby regular expressions.
 The goal of the grammar extension is to provide a rich environment for
 writing parsers that can be integrated into the Fabulator environment.
 
+Namespace: "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
+
+
 Regular Expressions
 ===================
 

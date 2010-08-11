@@ -19,6 +19,7 @@ rule
 
   sub_sequence: LT qname GT { result = Fabulator::Grammar::Expr::RuleRef.new(val[1]) }
               | text { result = Fabulator::Grammar::Expr::Text.new(val[0]) }
+              | DOT { result = Fabulator::Grammar::Expr::Any.new }
               | LP rules RP { result = val[1] }
               | LB text RB { result = Fabulator::Grammar::Expr::CharSet.new(val[1]) }
               | LB CARET text RB { result = Fabulator::Grammar::Expr::CharSet.new(val[2]); result.inverted }

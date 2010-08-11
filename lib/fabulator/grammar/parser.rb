@@ -9,7 +9,7 @@ module Fabulator
   module Grammar
     class Parser < Racc::Parser
 
-module_eval(<<'...end regex.racc/module_eval...', 'regex.racc', 47)
+module_eval(<<'...end regex.racc/module_eval...', 'regex.racc', 48)
   require 'fabulator/grammar'
 
   def parse(t, ctx)
@@ -150,84 +150,87 @@ module_eval(<<'...end regex.racc/module_eval...', 'regex.racc', 47)
 ##### State transition tables begin ###
 
 racc_action_table = [
-    29,     6,    22,    23,    25,    26,    44,    38,     7,     8,
-     9,    12,    13,    45,    15,     5,    17,     6,     7,     8,
-     9,    31,    13,    34,    15,     9,    17,    32,     7,     8,
-     9,     7,     8,     9,    41,    42,    33,     4,    35,    36,
-    37,    21,     4,    40,    19,    43,     4,    46,    47,    48 ]
+    31,    45,    25,    26,    28,    29,    35,     6,    46,     8,
+     9,    10,    12,    13,    39,    16,    17,     5,    19,     6,
+     8,     9,    10,    22,    13,    10,    16,    17,    33,    19,
+    34,     8,     9,    10,     8,     9,    10,    42,    43,     3,
+    36,    37,    38,    23,     3,    41,    20,    44,     3,    47,
+    48,    49 ]
 
 racc_action_check = [
-    17,    28,    11,    11,    11,    11,    42,    28,    17,    17,
-    17,     3,     3,    42,     3,     1,     3,     1,     3,     3,
-     3,    18,    18,    23,    18,    13,    18,    21,    18,    18,
-    18,    29,    29,    29,    36,    36,    22,    15,    25,    26,
-    27,     9,     6,    30,     5,    39,     0,    44,    45,    46 ]
+    19,    43,    14,    14,    14,    14,    25,    30,    43,    19,
+    19,    19,     4,     4,    30,     4,     4,     1,     4,     1,
+     4,     4,     4,     7,     7,    13,     7,     7,    23,     7,
+    24,     7,     7,     7,    31,    31,    31,    38,    38,    17,
+    26,    28,    29,    10,     6,    32,     5,    40,     0,    45,
+    46,    47 ]
 
 racc_action_pointer = [
-    43,    15,   nil,     7,   nil,    44,    39,   nil,   nil,    27,
-   nil,   -13,   nil,    12,   nil,    34,   nil,    -3,    17,   nil,
-   nil,    14,    20,     7,   nil,    22,    27,    34,    -1,    20,
-    33,   nil,   nil,   nil,   nil,   nil,    15,   nil,   nil,    35,
-   nil,   nil,    -6,   nil,    28,    32,    33,   nil,   nil ]
+    45,    17,   nil,   nil,     8,    46,    41,    19,   nil,   nil,
+    28,   nil,   nil,    11,   -14,   nil,   nil,    36,   nil,    -3,
+   nil,   nil,   nil,    14,    24,   -11,    23,   nil,    24,    29,
+     5,    22,    34,   nil,   nil,   nil,   nil,   nil,    17,   nil,
+    36,   nil,   nil,   -12,   nil,    29,    33,    34,   nil,   nil ]
 
 racc_action_default = [
-    -7,   -32,    -1,    -3,    -7,   -32,    -7,   -17,   -18,   -19,
-    -8,   -10,    -5,   -32,   -16,    -7,   -12,   -32,    -4,    49,
-    -2,   -32,   -21,   -25,    -9,   -23,   -32,   -32,   -32,   -32,
-   -32,    -6,   -20,   -22,   -26,   -24,   -32,   -11,   -13,   -32,
-   -14,   -27,   -32,   -15,   -32,   -29,   -28,   -30,   -31 ]
+    -7,   -33,    -1,    -7,    -3,   -33,    -7,    -4,   -18,   -19,
+   -20,    -8,    -5,   -33,   -10,   -17,   -13,    -7,   -12,   -33,
+    50,    -2,    -6,   -33,   -33,   -22,   -26,    -9,   -24,   -33,
+   -33,   -33,   -33,   -21,   -11,   -23,   -27,   -25,   -33,   -14,
+   -33,   -15,   -28,   -33,   -16,   -33,   -30,   -29,   -31,   -32 ]
 
 racc_goto_table = [
-     1,    30,    18,    20,    27,    24,   nil,   nil,   nil,   nil,
-   nil,   nil,   nil,    39,   nil,    28 ]
+     1,    32,     7,    21,    24,    27,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,    40,   nil,   nil,   nil,    30 ]
 
 racc_goto_check = [
      1,     8,     3,     2,     7,     6,   nil,   nil,   nil,   nil,
-   nil,   nil,   nil,     8,   nil,     1 ]
+   nil,   nil,   nil,     8,   nil,   nil,   nil,     1 ]
 
 racc_goto_pointer = [
-   nil,     0,    -3,    -2,   nil,   nil,    -6,    -9,   -16 ]
+   nil,     0,    -3,    -1,   nil,   nil,    -9,    -9,   -18 ]
 
 racc_goto_default = [
-   nil,   nil,     2,     3,    10,    11,   nil,    14,    16 ]
+   nil,   nil,     2,     4,    11,    14,   nil,    15,    18 ]
 
 racc_reduce_table = [
   0, 0, :racc_error,
-  1, 22, :_reduce_1,
-  3, 22, :_reduce_2,
-  1, 23, :_reduce_3,
-  2, 23, :_reduce_4,
-  2, 23, :_reduce_5,
-  3, 23, :_reduce_6,
-  0, 24, :_reduce_7,
-  2, 24, :_reduce_8,
-  2, 25, :_reduce_9,
-  1, 25, :_reduce_10,
-  3, 26, :_reduce_11,
-  1, 26, :_reduce_12,
-  3, 26, :_reduce_13,
-  3, 26, :_reduce_14,
-  4, 26, :_reduce_15,
-  1, 29, :_reduce_16,
-  1, 29, :_reduce_17,
-  1, 29, :_reduce_18,
-  1, 28, :_reduce_19,
-  3, 28, :_reduce_20,
-  1, 27, :_reduce_21,
-  2, 27, :_reduce_22,
-  1, 27, :_reduce_23,
-  2, 27, :_reduce_24,
-  1, 27, :_reduce_25,
-  2, 27, :_reduce_26,
-  3, 27, :_reduce_27,
-  5, 27, :_reduce_28,
-  4, 27, :_reduce_29,
-  5, 27, :_reduce_30,
-  6, 27, :_reduce_31 ]
+  1, 23, :_reduce_1,
+  3, 23, :_reduce_2,
+  1, 24, :_reduce_3,
+  2, 24, :_reduce_4,
+  2, 24, :_reduce_5,
+  3, 24, :_reduce_6,
+  0, 25, :_reduce_7,
+  2, 25, :_reduce_8,
+  2, 26, :_reduce_9,
+  1, 26, :_reduce_10,
+  3, 27, :_reduce_11,
+  1, 27, :_reduce_12,
+  1, 27, :_reduce_13,
+  3, 27, :_reduce_14,
+  3, 27, :_reduce_15,
+  4, 27, :_reduce_16,
+  1, 30, :_reduce_17,
+  1, 30, :_reduce_18,
+  1, 30, :_reduce_19,
+  1, 29, :_reduce_20,
+  3, 29, :_reduce_21,
+  1, 28, :_reduce_22,
+  2, 28, :_reduce_23,
+  1, 28, :_reduce_24,
+  2, 28, :_reduce_25,
+  1, 28, :_reduce_26,
+  2, 28, :_reduce_27,
+  3, 28, :_reduce_28,
+  5, 28, :_reduce_29,
+  4, 28, :_reduce_30,
+  5, 28, :_reduce_31,
+  6, 28, :_reduce_32 ]
 
-racc_reduce_n = 32
+racc_reduce_n = 33
 
-racc_shift_n = 49
+racc_shift_n = 50
 
 racc_token_table = {
   false => 0,
@@ -237,22 +240,23 @@ racc_token_table = {
   :DOLLAR => 4,
   :LT => 5,
   :GT => 6,
-  :LP => 7,
-  :RP => 8,
-  :LB => 9,
-  :RB => 10,
-  :TEXT => 11,
-  :INTEGER => 12,
-  :NCNAME => 13,
-  :COLON => 14,
-  :STAR => 15,
-  :QUESTION => 16,
-  :PLUS => 17,
-  :LC => 18,
-  :RC => 19,
-  :COMMA => 20 }
+  :DOT => 7,
+  :LP => 8,
+  :RP => 9,
+  :LB => 10,
+  :RB => 11,
+  :TEXT => 12,
+  :INTEGER => 13,
+  :NCNAME => 14,
+  :COLON => 15,
+  :STAR => 16,
+  :QUESTION => 17,
+  :PLUS => 18,
+  :LC => 19,
+  :RC => 20,
+  :COMMA => 21 }
 
-racc_nt_base = 21
+racc_nt_base = 22
 
 racc_use_result_var = true
 
@@ -280,6 +284,7 @@ Racc_token_to_s_table = [
   "DOLLAR",
   "LT",
   "GT",
+  "DOT",
   "LP",
   "RP",
   "LB",
@@ -396,28 +401,28 @@ module_eval(<<'.,.,', 'regex.racc', 20)
 
 module_eval(<<'.,.,', 'regex.racc', 21)
   def _reduce_13(val, _values, result)
-     result = val[1] 
+     result = Fabulator::Grammar::Expr::Any.new 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 22)
   def _reduce_14(val, _values, result)
-     result = Fabulator::Grammar::Expr::CharSet.new(val[1]) 
+     result = val[1] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 23)
   def _reduce_15(val, _values, result)
-     result = Fabulator::Grammar::Expr::CharSet.new(val[2]); result.inverted 
+     result = Fabulator::Grammar::Expr::CharSet.new(val[1]) 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'regex.racc', 25)
+module_eval(<<'.,.,', 'regex.racc', 24)
   def _reduce_16(val, _values, result)
-     result = val[0] 
+     result = Fabulator::Grammar::Expr::CharSet.new(val[2]); result.inverted 
     result
   end
 .,.,
@@ -436,7 +441,7 @@ module_eval(<<'.,.,', 'regex.racc', 27)
   end
 .,.,
 
-module_eval(<<'.,.,', 'regex.racc', 29)
+module_eval(<<'.,.,', 'regex.racc', 28)
   def _reduce_19(val, _values, result)
      result = val[0] 
     result
@@ -445,83 +450,90 @@ module_eval(<<'.,.,', 'regex.racc', 29)
 
 module_eval(<<'.,.,', 'regex.racc', 30)
   def _reduce_20(val, _values, result)
-     result = val[0] + ':' + val[2] 
+     result = val[0] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'regex.racc', 32)
+module_eval(<<'.,.,', 'regex.racc', 31)
   def _reduce_21(val, _values, result)
-     result = [ :zero_or_more ] 
+     result = val[0] + ':' + val[2] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 33)
   def _reduce_22(val, _values, result)
-     result = [ :zero_or_more, :min ] 
+     result = [ :zero_or_more ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 34)
   def _reduce_23(val, _values, result)
-     result = [ :one_or_more ] 
+     result = [ :zero_or_more, :min ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 35)
   def _reduce_24(val, _values, result)
-     result = [ :one_or_more, :min ] 
+     result = [ :one_or_more ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 36)
   def _reduce_25(val, _values, result)
-     result = [ :zero_or_one ] 
+     result = [ :one_or_more, :min ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 37)
   def _reduce_26(val, _values, result)
-     result = [ :zero_or_one, :min ] 
+     result = [ :zero_or_one ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 38)
   def _reduce_27(val, _values, result)
-     result = [ :exact, val[1].to_i ] 
+     result = [ :zero_or_one, :min ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 39)
   def _reduce_28(val, _values, result)
-     result = [ :range, val[1].to_i, val[3].to_i ] 
+     result = [ :exact, val[1].to_i ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 40)
   def _reduce_29(val, _values, result)
-     result = [ :range, val[1], '' ] 
+     result = [ :range, val[1].to_i, val[3].to_i ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 41)
   def _reduce_30(val, _values, result)
-     result = [ :min, :range, val[1], '' ] 
+     result = [ :range, val[1], '' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'regex.racc', 42)
   def _reduce_31(val, _values, result)
+     result = [ :min, :range, val[1], '' ] 
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'regex.racc', 43)
+  def _reduce_32(val, _values, result)
      result = [ :min, :range, val[1].to_i, val[3].to_i ] 
     result
   end
