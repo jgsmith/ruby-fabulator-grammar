@@ -1,0 +1,179 @@
+class Fabulator::Grammar::Parser
+
+  start rules
+
+rule
+  rules: anchored_rule { result = Fabulator::Grammar::Expr::Rules.new; result.add_alternative(val[0]) }
+       | rules PIPE anchored_rule { result = val[0]; result.add_alternative(val[2]) }
+
+  anchored_rule: rule { result = val[0] }
+       | CARET rule { result = val[1]; result.anchor_start }
+       | rule DOLLAR { result = val[0]; result.anchor_end }
+       | CARET rule DOLLAR { result = val[1]; result.anchor_start; result.anchor_end }
+
+  rule: { result = Fabulator::Grammar::Expr::Rule.new; }
+      | rule sequence { result = val[0]; result.add_sequence(val[1]); }
+
+  sequence: sub_sequence sequence_qualifiers { result = Fabulator::Grammar::Expr::Sequence.new(val[0], val[1]) }
+          | sub_sequence { result = Fabulator::Grammar::Expr::Sequence.new(val[0]) }
+
+  sub_sequence: LT qname GT { result = Fabulator::Grammar::Expr::RuleRef.new(val[1]) }
+              | text { result = Fabulator::Grammar::Expr::Text.new(val[0]) }
+              | LP rules RP { result = val[1] }
+              | LB text RB { result = Fabulator::Grammar::Expr::CharSet.new(val[1]) }
+
+  text: qname { result = val[0] }
+      | TEXT { result = val[0] }
+      | INTEGER { result = val[0] }
+
+  qname: NCNAME { result = val[0] }
+       | NCNAME COLON NCNAME { result = val[0] + ':' + val[2] }
+
+  sequence_qualifiers: STAR { result = [ :zero_or_more ] }
+      | STAR QUESTION { result = [ :zero_or_more, :min ] }
+      | PLUS { result = [ :one_or_more ] }
+      | PLUS QUESTION { result = [ :one_or_more, :min ] }
+      | QUESTION { result = [ :zero_or_one ] }
+      | QUESTION QUESTION { result = [ :zero_or_one, :min ] }
+      | LC INTEGER RC { result = [ :exact, val[1].to_i ] }
+      | LC INTEGER COMMA INTEGER RC { result = [ :range, val[1].to_i, val[3].to_i ] }
+      | LC INTEGER COMMA INTEGER RC QUESTION { result = [ :min, :range, val[1].to_i, val[3].to_i ] }
+      
+
+---- inner
+  require 'fabulator/grammar'
+
+  def parse(t, ctx)
+    @source = t
+    @curpos = 0 
+    @context = ctx
+    @line = 0   
+
+    @yydebug = true
+      
+    @last_token = nil
+  
+    do_parse
+  end
+    
+  def on_error(*args)
+    raise Fabulator::Grammar::ParserError.new("unable to parse '#{args[1]}' near line #{@line + 1}, column #{@col}")
+  end
+
+  @@regex = {
+    :ncname => %r{(?:[a-zA-Z_][-a-zA-Z0-9_.]*)}
+  }
+
+  @@regex[:qname] = %r{((?:#{@@regex[:ncname]}:)?#{@@regex[:ncname]})}
+
+  def next_token
+    @token = nil
+    white_space = 0
+    new_line = 0
+    @col = 0
+    while @curpos < @source.length && @source[@curpos..@curpos] =~ /\s/ do
+      if @source[@curpos..@curpos] =~ /\n/
+        new_line = new_line + 1
+        @line = @line + 1
+        @col = 0
+      else
+        @col = @col + 1
+      end
+      @curpos = @curpos + 1
+      white_space = white_space + 1   
+    end
+
+    # skip comments delimited by (:  :)
+    # comments can be nested
+    # these are XPath 2.0 comments
+    #
+    if @curpos < @source.length && @source[@curpos..@curpos+1] == '(:'
+      comment_depth = 1
+      @curpos = @curpos + 2
+      @col = @col + 2
+      while comment_depth > 0 && @curpos < @source.length
+        if @source[@curpos..@curpos+1] == '(:'
+          comment_depth = comment_depth + 1
+          @curpos = @curpos + 1
+          @col = @col + 1
+        end
+        if @source[@curpos..@curpos+1] == ':)'
+          comment_depth = comment_depth - 1
+          @curpos = @curpos + 1
+          @col = @col + 1
+        end
+        @curpos = @curpos + 1
+        @col = @col + 1
+      end
+      white_space = white_space + 1
+    end
+
+    while @curpos < @source.length && @source[@curpos..@curpos] =~ /\s/ do
+      if @source[@curpos..@curpos] =~ /\n/
+        new_line = new_line + 1
+        @line = @line + 1
+        @col = 0
+      else
+        @col = @col + 1
+      end
+      @curpos = @curpos + 1
+      white_space = white_space + 1
+    end
+
+    if @curpos >= @source.length
+      @last_token = nil
+      return [ false, false ]
+    end
+
+    case @source[@curpos..@curpos]
+      when '<': @token = [ :LT, '<' ]
+      when '>': @token = [ :GT, '>' ]
+      when '[': @token = [ :LB, '[' ]
+      when ']': @token = [ :RB, ']' ]
+      when '(': @token = [ :LP, '(' ]
+      when ')': @token = [ :RP, ')' ]
+      when '{': @token = [ :LC, '{' ]
+      when '}': @token = [ :RC, '}' ]
+      when ':': @token = [ :COLON, ':' ]
+      when ',': @token = [ :COMMA, ',' ]
+      when '|': @token = [ :PIPE, '|' ]
+      when '*': @token = [ :STAR, '*' ]
+      when '+': @token = [ :PLUS, '+' ]
+      when '.': @token = [ :DOT,  '.' ]
+      when '?': @token = [ :QUESTION, '?' ]
+      when '$': @token = [ :DOLLAR, '$' ]
+      when '^': @token = [ :CARET, '^' ]
+    end
+
+    if @token.nil?
+      # get longest sequence of non-special characters
+      # if it's all digits, report INTEGER
+      # if it's a qname, report QNAME
+      # otherwise, report TEXT
+      @source[@curpos..@source.length-1] =~ /^(((\\.)|[^ \$\^\[\]<>\{\}\(\):,|*+.?])+)*/
+      text = $1
+      bits = text.split(/\\/)
+      text = bits.join('')
+      @curpos += bits.size - 1
+      if text.length > 0
+        if @source[@curpos+text.length .. @curpos+text.length] =~ /[*?+\{]/
+          text = text[0..text.length-2]
+          @token = [ :TEXT, text ]
+        else
+          case text
+            when /^\d+$/: @token = [ :INTEGER, text ]
+            when /^#{@@regex[:ncname]}$/: @token = [ :NCNAME, text ]
+            else @token = [ :TEXT, text ]
+          end
+        end
+      end
+    end
+
+    if @token.nil?
+      puts "Uh oh... we don't know what to do: #{@source[@curpos .. @source.length-1]}"
+    else
+      @curpos += @token[1].length
+    end
+
+    return @token
+  end
