@@ -27,11 +27,16 @@ module Fabulator::Grammar::Expr
       end
       chars = chars.collect{ |cc| Regexp.quote(cc) }.join('')
       @set = chars + ranges
+      @inverted = false
+    end
+
+    def inverted
+      @inverted = true
     end
 
     def to_regex
       if @set != ''
-        Regexp.compile("[" + @set + "]")
+        Regexp.compile("[" + (@inverted ? '^' : '') + @set + "]")
       else
         %r{}
       end

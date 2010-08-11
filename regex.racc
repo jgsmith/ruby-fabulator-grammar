@@ -21,6 +21,7 @@ rule
               | text { result = Fabulator::Grammar::Expr::Text.new(val[0]) }
               | LP rules RP { result = val[1] }
               | LB text RB { result = Fabulator::Grammar::Expr::CharSet.new(val[1]) }
+              | LB CARET text RB { result = Fabulator::Grammar::Expr::CharSet.new(val[2]); result.inverted }
 
   text: qname { result = val[0] }
       | TEXT { result = val[0] }
