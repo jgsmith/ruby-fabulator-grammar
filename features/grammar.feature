@@ -23,7 +23,7 @@ Feature: Basic regex parsing
   Scenario: Parsing a simple text string
    Given a context
      And the prefix g as "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
-   When I parse the regex (foo{1,4}$)
+   When I parse the regex (foo<1,4>$)
    Then it should match "foo"
    Then it should match "fooooo"
    Then it should not match "foooooo"
@@ -33,7 +33,7 @@ Feature: Basic regex parsing
   Scenario: Parsing a simple text string
    Given a context
      And the prefix g as "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
-   When I parse the regex (^[Ff]o[-a-zA-F01234-9]+?)
+   When I parse the regex (^<[Ff]>o<[-a-zA-F01234-9]>+?)
    Then it should match "foo"
     And it should match "Foo"
     And it should match "FoF03z-"
@@ -43,14 +43,14 @@ Feature: Basic regex parsing
   Scenario: Parsing a simple text string
    Given a context
      And the prefix g as "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
-   When I parse the regex (^[^0-9][a-z][0-9]$)
+   When I parse the regex (^<[^0-9]><[a-z]><[0-9]>$)
    Then it should match "fo0"
     And it should not match "0l0"
 
   Scenario: Parsing a simple text string
    Given a context
      And the prefix g as "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
-   When I parse the regex (^[^0-9].[0-9]$)
+   When I parse the regex (^<[^0-9]>.<[0-9]>$)
    Then it should match "fo0"
     And it should not match "0l0"
     And it should not match "00"
@@ -59,17 +59,7 @@ Feature: Basic regex parsing
   Scenario: Parsing a simple text string
    Given a context
      And the prefix g as "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
-   When I parse the regex ([\[-\]]o[a-z\]A-F01234-9]+?)
-
-  Scenario: Parsing a simple text string
-   Given a context
-     And the prefix g as "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
-   When I parse the regex (<foo><g:bar>*)
-
-  Scenario: Parsing a simple text string
-   Given a context
-     And the prefix g as "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
-   When I parse the regex (bar ( <foo> <g:bar> ) *)
+   When I parse the regex (<[\[-\]]>o<[a-z\]A-F01234-9]>+?)
 
   Scenario: Adding two numbers together as a union
    Given a context

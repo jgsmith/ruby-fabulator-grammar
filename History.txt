@@ -1,9 +1,12 @@
+=== 0.0.2 2010-08-19
+
+* 3 minor enhancements:
+  * Create file that keeps config.gem from complaining
+  * Change character sets to look a little like Perl 6
+  * Use <,> for repetition counts
+
 === 0.0.1 2010-08-11
 
 * 1 major enhancement:
   * Initial release
 
-=== 0.0.2
-
-* 1 minor enhancement:
-  * Create file that keeps config.gem from complaining

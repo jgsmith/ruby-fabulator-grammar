@@ -14,19 +14,21 @@ rule
   rule: { result = Fabulator::Grammar::Expr::Rule.new; }
       | rule sequence { result = val[0]; result.add_sequence(val[1]); }
 
-  sequence: sub_sequence sequence_qualifiers { result = Fabulator::Grammar::Expr::Sequence.new(val[0], val[1]) }
-          | sub_sequence { result = Fabulator::Grammar::Expr::Sequence.new(val[0]) }
+  sequence: atom sequence_qualifiers { result = Fabulator::Grammar::Expr::Sequence.new(val[0], val[1]) }
+          | atom { result = Fabulator::Grammar::Expr::Sequence.new(val[0]) }
 
-  sub_sequence: LT qname GT { result = Fabulator::Grammar::Expr::RuleRef.new(val[1]) }
-              | text { result = Fabulator::Grammar::Expr::Text.new(val[0]) }
-              | DOT { result = Fabulator::Grammar::Expr::Any.new }
-              | LP rules RP { result = val[1] }
-              | LB text RB { result = Fabulator::Grammar::Expr::CharSet.new(val[1]) }
-              | LB CARET text RB { result = Fabulator::Grammar::Expr::CharSet.new(val[2]); result.inverted }
+  atom: text { result = Fabulator::Grammar::Expr::Text.new(val[0]) }
+      | DOT { result = Fabulator::Grammar::Expr::Any.new }
+      | LP rules RP { result = val[1] }
+      | LB rules RB { result = val[1] }
+      | LT_LB text RB_GT { result = Fabulator::Grammar::Expr::CharSet.new(val[1]) }
+      | LT_LB CARET text RB_GT { result = Fabulator::Grammar::Expr::CharSet.new(val[2]); result.inverted }
+#      | LT qname GT { result = Fabulator::Grammar::Expr::RuleRef.new(val[1]) }
 
   text: qname { result = val[0] }
       | TEXT { result = val[0] }
       | INTEGER { result = val[0] }
+      | COMMA { result = val[0] }
 
   qname: NCNAME { result = val[0] }
        | NCNAME COLON NCNAME { result = val[0] + ':' + val[2] }
@@ -37,11 +39,11 @@ rule
       | PLUS QUESTION { result = [ :one_or_more, :min ] }
       | QUESTION { result = [ :zero_or_one ] }
       | QUESTION QUESTION { result = [ :zero_or_one, :min ] }
-      | LC INTEGER RC { result = [ :exact, val[1].to_i ] }
-      | LC INTEGER COMMA INTEGER RC { result = [ :range, val[1].to_i, val[3].to_i ] }
-      | LC INTEGER COMMA RC { result = [ :range, val[1], '' ] }
-      | LC INTEGER COMMA RC QUESTION { result = [ :min, :range, val[1], '' ] }
-      | LC INTEGER COMMA INTEGER RC QUESTION { result = [ :min, :range, val[1].to_i, val[3].to_i ] }
+      | LT INTEGER GT { result = [ :exact, val[1].to_i ] }
+      | LT INTEGER COMMA INTEGER GT { result = [ :range, val[1].to_i, val[3].to_i ] }
+      | LT INTEGER COMMA GT { result = [ :range, val[1], '' ] }
+      | LT INTEGER COMMA GT QUESTION { result = [ :min, :range, val[1], '' ] }
+      | LT INTEGER COMMA INTEGER GT QUESTION { result = [ :min, :range, val[1].to_i, val[3].to_i ] }
       
 
 ---- inner
@@ -64,11 +66,40 @@ rule
     raise Fabulator::Grammar::ParserError.new("unable to parse '#{args[1]}' near line #{@line + 1}, column #{@col}")
   end
 
+  @@ops = {
+    '<{' => :LT_LC,
+    '}>' => :RC_GT,
+    '<[' => :LT_LB,
+    ']>' => :RB_GT,
+    '['  => :LB,
+    ']'  => :RB,
+    '('  => :LP,
+    ')'  => :RP,
+    '{'  => :LC,
+    '}'  => :RC,
+    '<'  => :LT,
+    '>'  => :GT,
+    '#'  => :HASH,
+    '$'  => :DOLLAR,
+    '^'  => :CARET,
+    '&'  => :AND,
+    '*'  => :STAR,
+    '+'  => :PLUS,
+    '?'  => :QUESTION,
+    '.'  => :DOT,
+    '|'  => :PIPE,
+    ','  => :COMMA,
+    ':'  => :COLON
+  }
+
+
   @@regex = {
+     :simple_tokens => %r{^(#{Regexp.union(@@ops.keys.sort_by{|a| a.length}.reverse.collect{ |k| k })})},
     :ncname => %r{(?:[a-zA-Z_][-a-zA-Z0-9_.]*)}
   }
 
   @@regex[:qname] = %r{((?:#{@@regex[:ncname]}:)?#{@@regex[:ncname]})}
+  @@regex[:general] = Regexp.compile(%{^#{@@regex[:qname]}|#{@@regex[:simple_tokens]}})
 
   def next_token
     @token = nil
@@ -129,24 +160,31 @@ rule
       return [ false, false ]
     end
 
-    case @source[@curpos..@curpos]
-      when '<': @token = [ :LT, '<' ]
-      when '>': @token = [ :GT, '>' ]
-      when '[': @token = [ :LB, '[' ]
-      when ']': @token = [ :RB, ']' ]
-      when '(': @token = [ :LP, '(' ]
-      when ')': @token = [ :RP, ')' ]
-      when '{': @token = [ :LC, '{' ]
-      when '}': @token = [ :RC, '}' ]
-      when ':': @token = [ :COLON, ':' ]
-      when ',': @token = [ :COMMA, ',' ]
-      when '|': @token = [ :PIPE, '|' ]
-      when '*': @token = [ :STAR, '*' ]
-      when '+': @token = [ :PLUS, '+' ]
-      when '.': @token = [ :DOT,  '.' ]
-      when '?': @token = [ :QUESTION, '?' ]
-      when '$': @token = [ :DOLLAR, '$' ]
-      when '^': @token = [ :CARET, '^' ]
+#    case @source[@curpos..@curpos]
+#      when '<': @token = [ :LT, '<' ]
+#      when '>': @token = [ :GT, '>' ]
+#      when '[': @token = [ :LB, '[' ]
+#      when ']': @token = [ :RB, ']' ]
+#      when '(': @token = [ :LP, '(' ]
+#      when ')': @token = [ :RP, ')' ]
+#      when '{': @token = [ :LC, '{' ]
+#      when '}': @token = [ :RC, '}' ]
+#      when ':': @token = [ :COLON, ':' ]
+#      when ',': @token = [ :COMMA, ',' ]
+#      when '|': @token = [ :PIPE, '|' ]
+#      when '*': @token = [ :STAR, '*' ]
+#      when '+': @token = [ :PLUS, '+' ]
+#      when '.': @token = [ :DOT,  '.' ]
+#      when '?': @token = [ :QUESTION, '?' ]
+#      when '$': @token = [ :DOLLAR, '$' ]
+#      when '^': @token = [ :CARET, '^' ]
+#    end
+
+    res = @@regex[:simple_tokens].match(@source[@curpos..@source.length-1])
+    if !res.nil?
+      if !res[1].nil?
+        @token = [ @@ops[res[1]], res[1] ]
+      end
     end
 
     if @token.nil?
@@ -161,6 +199,7 @@ rule
       @curpos += bits.size - 1
       if text.length > 0
         if @source[@curpos+text.length .. @curpos+text.length] =~ /[*?+\{]/
+# TODO: make sure we backtrack properly if the last character is escaped
           text = text[0..text.length-2]
           @token = [ :TEXT, text ]
         else
