@@ -9,7 +9,7 @@ module Fabulator
 
   module Grammar
     module Actions
-      class Lib < Fabulator::ActionLib
+      class Lib < Fabulator::TagLib
         register_namespace GRAMMAR_NS
 
         structural 'grammar', Grammar
