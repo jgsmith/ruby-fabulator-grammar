@@ -1,30 +1,50 @@
-class Fabulator::Grammar::Parser
+class Fabulator::Grammar::TokenParser
 
   start rules
 
 rule
-  rules: anchored_rule { result = Fabulator::Grammar::Expr::Rules.new; result.add_alternative(val[0]) }
+  rules: anchored_rule { result = Fabulator::Grammar::Expr::Token.new; result.add_alternative(val[0]) }
        | rules PIPE anchored_rule { result = val[0]; result.add_alternative(val[2]) }
 
   anchored_rule: rule { result = val[0] }
-       | CARET rule { result = val[1]; result.anchor_start }
-       | rule DOLLAR { result = val[0]; result.anchor_end }
-       | CARET rule DOLLAR { result = val[1]; result.anchor_start; result.anchor_end }
+       | left_anchor rule { result = val[1]; result.anchor_start(val[0]) }
+       | rule right_anchor { result = val[0]; result.anchor_end(val[1]) }
+       | left_anchor rule right_anchor { result = val[1]; result.anchor_start(val[0]); result.anchor_end(val[2]) }
 
-  rule: { result = Fabulator::Grammar::Expr::Rule.new; }
+  left_anchor: CARET { result = '^' }
+       | CARET CARET { result = '^^' }
+
+  right_anchor: DOLLAR { result = '$' }
+       | DOLLAR DOLLAR { result = '$$' }
+
+  rule: { result = Fabulator::Grammar::Expr::TokenAlternative.new; }
       | rule sequence { result = val[0]; result.add_sequence(val[1]); }
 
-  sequence: atom sequence_qualifiers { result = Fabulator::Grammar::Expr::Sequence.new(val[0], val[1]) }
-          | atom { result = Fabulator::Grammar::Expr::Sequence.new(val[0]) }
+  sequence: atom sequence_qualifiers { result = Fabulator::Grammar::Expr::Sequence.new(nil, val[0], val[1]) }
+          | atom { result = Fabulator::Grammar::Expr::Sequence.new(nil, val[0]) }
 
   atom: text { result = Fabulator::Grammar::Expr::Text.new(val[0]) }
       | DOT { result = Fabulator::Grammar::Expr::Any.new }
       | LP rules RP { result = val[1] }
-      | LB rules RB { result = val[1] }
-      | LT_LB text RB_GT { result = Fabulator::Grammar::Expr::CharSet.new(val[1]) }
-      | LT_LB CARET text RB_GT { result = Fabulator::Grammar::Expr::CharSet.new(val[2]); result.inverted }
-#      | LT qname GT { result = Fabulator::Grammar::Expr::RuleRef.new(val[1]) }
+      | LB atom_expr RB { result = val[1] }
 
+  atom_expr: char_set_expr
+
+ #{ result = Fabulator::Grammar::Expr::CharSet.new; result.universal }
+  char_set_expr: char_set { result = val[0] }
+      | MINUS char_set { result = Fabulator::Grammar::Expr::CharSet.new; result.universal; result.but_not(val[1]) }
+      | char_set_expr PLUS char_set { result = val[0].or(val[2]) }
+      | char_set_expr MINUS char_set { result = val[0].but_not(val[2]) }
+
+  char_set: LB char_set_text RB { result = Fabulator::Grammar::Expr::CharSet.new(val[1]) }
+      | COLON NCNAME COLON { result = Fabulator::Grammar::Expr::CharClass.new(val[1]) }
+      | LP char_set_expr RP { result = val[1] }
+
+  char_set_text: { result = '' }
+      | char_set_text CHAR_TEXT { result = val[0] + val[1] }
+      | char_set_text MINUS CHAR_TEXT { result = val[0] + '-' + val[2] }
+      | char_set_text PLUS CHAR_TEXT { result = val[0] + '+' + val[2] }
+      
   text: qname { result = val[0] }
       | TEXT { result = val[0] }
       | INTEGER { result = val[0] }
@@ -39,25 +59,27 @@ rule
       | PLUS QUESTION { result = [ :one_or_more, :min ] }
       | QUESTION { result = [ :zero_or_one ] }
       | QUESTION QUESTION { result = [ :zero_or_one, :min ] }
-      | LT INTEGER GT { result = [ :exact, val[1].to_i ] }
-      | LT INTEGER COMMA INTEGER GT { result = [ :range, val[1].to_i, val[3].to_i ] }
-      | LT INTEGER COMMA GT { result = [ :range, val[1], '' ] }
-      | LT INTEGER COMMA GT QUESTION { result = [ :min, :range, val[1], '' ] }
-      | LT INTEGER COMMA INTEGER GT QUESTION { result = [ :min, :range, val[1].to_i, val[3].to_i ] }
+      | LLB INTEGER RB { result = [ :exact, val[1].to_i ] }
+      | LLB INTEGER COMMA INTEGER RB { result = [ :range, val[1].to_i, val[3].to_i ] }
+      | LLB INTEGER COMMA RB { result = [ :range, val[1], '' ] }
+      | LLB INTEGER COMMA RB QUESTION { result = [ :min, :range, val[1], '' ] }
+      | LLB INTEGER COMMA INTEGER RB QUESTION { result = [ :min, :range, val[1].to_i, val[3].to_i ] }
       
 
 ---- inner
   require 'fabulator/grammar'
 
-  def parse(t, ctx)
+  def parse(t)
     @source = t
     @curpos = 0 
-    @context = ctx
+    @col = 0
     @line = 0   
 
     @yydebug = true
       
     @last_token = nil
+
+    @brackets = 0
   
     do_parse
   end
@@ -67,24 +89,23 @@ rule
   end
 
   @@ops = {
-    '<{' => :LT_LC,
-    '}>' => :RC_GT,
-    '<[' => :LT_LB,
-    ']>' => :RB_GT,
+    #'[{' => :LB_LC,
+    #'}]' => :RC_RB,
+    #'[[' => :LB_LB,
+    #']]' => :RB_RB,
     '['  => :LB,
     ']'  => :RB,
     '('  => :LP,
     ')'  => :RP,
-    '{'  => :LC,
-    '}'  => :RC,
-    '<'  => :LT,
-    '>'  => :GT,
-    '#'  => :HASH,
+    #'{'  => :LC,
+    #'}'  => :RC,
+    #'#'  => :HASH,
     '$'  => :DOLLAR,
     '^'  => :CARET,
-    '&'  => :AND,
+    #'&'  => :AND,
     '*'  => :STAR,
     '+'  => :PLUS,
+    '-'  => :MINUS,
     '?'  => :QUESTION,
     '.'  => :DOT,
     '|'  => :PIPE,
@@ -98,6 +119,8 @@ rule
     :ncname => %r{(?:[a-zA-Z_][-a-zA-Z0-9_.]*)}
   }
 
+ #puts @@regex[:simple_tokens]
+
   @@regex[:qname] = %r{((?:#{@@regex[:ncname]}:)?#{@@regex[:ncname]})}
   @@regex[:general] = Regexp.compile(%{^#{@@regex[:qname]}|#{@@regex[:simple_tokens]}})
 
@@ -105,7 +128,6 @@ rule
     @token = nil
     white_space = 0
     new_line = 0
-    @col = 0
     while @curpos < @source.length && @source[@curpos..@curpos] =~ /\s/ do
       if @source[@curpos..@curpos] =~ /\n/
         new_line = new_line + 1
@@ -192,11 +214,12 @@ rule
       # if it's all digits, report INTEGER
       # if it's a qname, report QNAME
       # otherwise, report TEXT
-      @source[@curpos..@source.length-1] =~ /^(((\\.)|[^ \$\^\[\]<>\{\}\(\):,|*+.?])+)*/
+      @source[@curpos..@source.length-1] =~ /^(((\\.)|[^ \$\^\[\]\{\}\(\):,|*+.?])+)*/
       text = $1
       bits = text.split(/\\/)
       text = bits.join('')
       @curpos += bits.size - 1
+      @col += bits.size - 1
       if text.length > 0
         if @source[@curpos+text.length .. @curpos+text.length] =~ /[*?+\{]/
 # TODO: make sure we backtrack properly if the last character is escaped
@@ -216,6 +239,18 @@ rule
       puts "Uh oh... we don't know what to do: #{@source[@curpos .. @source.length-1]}"
     else
       @curpos += @token[1].length
+      @col += @token[1].length
+    end
+
+    if @token[0] == :LB
+      if @brackets == 0 && @source[@curpos..@source.length-1] =~ /^\s*\d/
+        @token[0] = :LLB
+      end
+      @brackets += 1
+    elsif @token[0] == :RB
+      @brackets -= 1
+    elsif @brackets > 1
+      @token[0] = :CHAR_TEXT
     end
 
     return @token

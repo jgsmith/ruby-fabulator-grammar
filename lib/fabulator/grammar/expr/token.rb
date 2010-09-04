@@ -1,5 +1,7 @@
 module Fabulator::Grammar::Expr
-  class Rules
+  class Token
+    attr_accessor :name
+
     def initialize
       @alternatives = [ ]
     end
@@ -10,6 +12,15 @@ module Fabulator::Grammar::Expr
 
     def to_regex
       Regexp.union(@alternatives.collect{|a| a.to_regex })
+    end
+
+    def parse(cursor)
+      res = cursor.match_token(self.to_regex)
+      if res.nil?
+        return nil
+      else
+        return res
+      end
     end
   end
 end

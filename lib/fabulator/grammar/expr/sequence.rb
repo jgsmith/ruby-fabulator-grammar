@@ -1,8 +1,9 @@
 module Fabulator::Grammar::Expr
   class Sequence
-    def initialize(sub_seq, count = [ :one ])
+    def initialize(hypo, sub_seq, count = [ :one ])
       @sub_sequence = sub_seq
       @modifiers = ''
+      @hypothetical = hypo
       case (count - [:min]).first
         when :zero_or_one: @modifiers = '?'
         when :one_or_more: @modifiers = '+'
@@ -20,7 +21,12 @@ module Fabulator::Grammar::Expr
     end
 
     def to_regex
+      # how do we handle setting the hypothetical?
       s = %r{#{@sub_sequence.to_regex}#{@modifiers}}
+    end
+
+    def parse(cursor)
+      cursor.match(self.to_regex)
     end
   end
 end

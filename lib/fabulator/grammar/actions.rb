@@ -1,22 +1,30 @@
-#require 'fabulator/grammar/actions/grammar'
 
 module Fabulator
   GRAMMAR_NS = "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
+
+  require 'fabulator/grammar/actions/grammar'
+  require 'fabulator/grammar/actions/rule'
+  require 'fabulator/grammar/actions/token'
+  require 'fabulator/grammar/actions/when'
+
   module Grammar
     module Actions
-      class Lib
-        include Fabulator::ActionLib
-
+      class Lib < Fabulator::ActionLib
         register_namespace GRAMMAR_NS
 
-        #action 'grammar', Grammar
+        structural 'grammar', Grammar
+        structural 'rule', Rule
+        structural 'token', Token
+        structural 'when', When
+
+#        action 'result', Result
 
         ## reference a grammar name
         function 'match' do |ctx, args|
           # first arg is the regex or <rule name>
           regex = args[0].to_s
-          parser = Fabulator::Grammar::Parser.new
-          compiled = parser.parse(regex, ctx).to_regex
+          parser = Fabulator::Grammar::TokenParser.new
+          compiled = parser.parse(regex).to_regex
           if args[1].is_a?(Array)
             args[1].collect{|a|
               if a.to_s =~ compiled

@@ -1,35 +1,40 @@
-module Fabulator::Grammar::Expr
-  class Rule
-    def initialize
-      @sequences = [ ]
-      @anchor_start = false
-      @anchor_end = false
-    end
+module Fabulator
+  module Grammar
+    module Expr
+      class Rule
+        attr_accessor :name
 
-    def anchor_start
-      @anchor_start = true
-    end
-
-    def anchor_end
-      @anchor_end = true
-    end
-
-    def add_sequence(s)
-      @sequences << s
-    end
-
-    def to_regex
-      r = %r{#{@sequences.collect{ |s| s.to_regex }}}
-      if @anchor_start
-        if @anchor_end
-          %r{^#{r}$}
-        else
-          %r{^#{r}}
+        def initialize
+          @alternatives = [ ]
         end
-      elsif @anchor_end
-        %r{#{r}$}
-      else
-        r
+
+        def add_alternative(a)
+          @alternatives << a
+        end
+
+        def parse(s)
+          if s.anchored
+            @alternatives.each do |alternative|
+              ret = s.attempt { |cursor| 
+                cursor.anchored = true 
+                alternative.parse(cursor) 
+              }
+              return ret unless ret.nil?
+            end
+          else
+            while !s.eof
+              @alternatives.each do |alternative|
+                ret = s.attempt { |cursor| 
+                  cursor.anchored = true 
+                  alternative.parse(cursor) 
+                }
+                return ret unless ret.nil?
+              end
+              s.advance_position(1)
+            end
+          end
+          return nil
+        end
       end
     end
   end

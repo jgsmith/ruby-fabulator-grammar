@@ -7,8 +7,10 @@ begin
     gem.email = "jgsmith@tamu.edu"
     gem.homepage = "http://github.com/jgsmith/ruby-fabulator-grammar"
     gem.authors = ["James Smith"]
-    gem.add_dependency(%q<fabulator>, [">= 0.0.1"]) 
+    gem.add_dependency(%q<fabulator>, [">= 0.0.7"]) 
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
+    # not sure how to add dependency of a library that's not a gem
+    gem.requirements << 'bitset, 1.0 or greater'
   end
 rescue LoadError
   puts "Jeweler (or a dependency) not available. This is only required if you plan to package fabulator-exhibit as a gem."
