@@ -3,6 +3,7 @@ module Fabulator
   GRAMMAR_NS = "http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
 
   require 'fabulator/grammar/actions/grammar'
+  require 'fabulator/grammar/actions/context'
   require 'fabulator/grammar/actions/rule'
   require 'fabulator/grammar/actions/token'
   require 'fabulator/grammar/actions/when'
@@ -13,6 +14,7 @@ module Fabulator
         register_namespace GRAMMAR_NS
 
         structural 'grammar', Grammar
+        structural 'context', Context
         structural 'rule', Rule
         structural 'token', Token
         structural 'when', When

@@ -167,3 +167,23 @@ Feature: Basic regex parsing
       """
     Then "something" should match "a0A"
      And "something" should not match "a0a"
+
+  @context
+  Scenario: Parsing a grammar xml definition
+    Given a context
+    Given the grammar
+      """
+        <g:grammar xmlns:g="http://dh.tamu.edu/ns/fabulator/grammar/1.0#">
+          <g:context g:mode="normal">
+            <g:token g:name="LETTER" g:matches="[:alpha:]" />
+          </g:context>
+          <g:token g:name="NUMBER" g:matches="[:digit:]" />
+          <g:token g:name="LETTER" g:matches="[:upper:]" g:mode="upper"/>
+          <g:token g:name="LETTER" g:matches="[:lower:]" g:mode="lower"/>
+          <g:rule g:name="something">
+            <g:when g:matches="{normal} LETTER NUMBER {upper} LETTER" />
+          </g:rule>
+        </g:grammar>
+      """
+    Then "something" should match "a0A"
+     And "something" should not match "a0a"
