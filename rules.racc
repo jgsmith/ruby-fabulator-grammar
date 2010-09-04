@@ -1,0 +1,220 @@
+class Fabulator::Grammar::RuleParser
+
+  start rules
+
+rule
+
+  rules: rule { result = Fabulator::Grammar::Expr::Rule.new; result.add_alternative(val[0]) }
+       | rules PIPE rule { result = val[0]; result.add_alternative(val[2]) }
+
+  rule: { result = Fabulator::Grammar::Expr::RuleAlternative.new; }
+      | rule directive sequence { result = val[0]; result.add_directive(val[1]); result.add_sequence(val[2]); }
+
+  directive:
+      | LC NCNAME RC { result = Fabulator::Grammar::Expr::RuleMode.new(val[1]) }
+      | LB commit RB
+      | LB uncommit RB
+      | LB reject RB
+      | LB skip NCNAME RB
+      | LB skip RB
+      | LB resync NCNAME RB
+      | LB resync RB
+
+  sequence: atom sequence_qualifiers { result = Fabulator::Grammar::Expr::RuleSequence.new(nil, val[0], val[1]) }
+          | atom { result = Fabulator::Grammar::Expr::RuleSequence.new(nil, val[0]) }
+          | hypothetical atom sequence_qualifiers { result = Fabulator::Grammar::Expr::RuleSequence.new(val[0], val[1], val[2]) }
+          | hypothetical atom { result = Fabulator::Grammar::Expr::RuleSequence.new(val[0], val[1]) }
+
+  hypothetical: NCNAME COLON_EQUAL { result = val[0] }
+
+  # /\((\?|s|s\?|\d+(\.\.(\d+)?)?|\.\.\d+)(\s+ncname)?\)/
+  # and with no prior space -- and ncname should be specifiable as
+  #   a text constant
+  # the ncname specifies a token that separates instances
+  # shorthand: if we see '(s[ )]', '(s?[ )]', '(?)', '(\d', then we have
+  # something for the following instead of LP rules RP
+  sequence_qualifiers: LLP QUESTION RP { result = [ '?' ] }
+          | LLP S opt_separator RP { result = [ 's', val[2] ] }
+          | LLP S QUESTION opt_separator RP { result = [ 's?', val[3] ] }
+          | LLP INTEGER opt_separator RP { result = [ 'count', val[1], val[2] ] }
+          | LLP INTEGER DOT_DOT INTEGER opt_separator RP { result = [ 'range', [ val[1], val[3] ], val[4] ] }
+          | LLP DOT_DOT INTEGER opt_separator RP { result = [ 'upto', val[2], val[3] ] }
+          | LLP INTEGER DOT_DOT opt_separator RP { result = [ 'atleast', val[1],val[3] ] }
+
+  opt_separator:
+      | atom
+
+  atom: LITERAL { result = Fabulator::Grammar::Expr::Text.new(val[0]) }
+      | LP rules RP { result = val[1] }
+      | NCNAME { result = Fabulator::Grammar::Expr::RuleRef.new(val[0]) }
+
+
+---- inner
+  require 'fabulator/grammar'
+
+  def parse(t)
+    @source = t
+    @curpos = 0
+    @line = 0
+    @col = 0
+
+    @in_quantifier = false
+       
+    @yydebug = true
+
+    @last_token = nil
+       
+    do_parse
+  end
+
+  def on_error(*args)
+    raise Fabulator::Grammar::ParserError.new("unable to parse '#{args[1]}' near line #{@line + 1}, column #{@col}")
+  end
+
+  @@ops = {
+    ':=' => :COLON_EQUAL,
+    '['  => :LB,
+    ']'  => :RB,
+    '('  => :LP,
+    ')'  => :RP,
+    '{'  => :LC,
+    '}'  => :RC,
+    '?'  => :QUESTION,
+    '.'  => :DOT,
+    '..' => :DOT_DOT,
+    '|'  => :PIPE,
+    ','  => :COMMA,
+    ':'  => :COLON
+  }
+
+  @@regex = {
+    :simple_tokens => %r{^(#{Regexp.union(@@ops.keys.sort_by{|a| a.length}.reverse.collect{ |k| k })})},
+    :ncname => %r{(?:[a-zA-Z_][-a-zA-Z0-9_.]*)},
+    :integer => %r{(\d+)},
+    :literal => %r{((?:"(?:[^\\"]*(?:\\.[^\\"]*)*)")|(?:'(?:[^\\']*(?:\\.[^\\']*)*)'))},
+  }
+
+  @@regex[:general] = Regexp.compile(%{^(#{@@regex[:ncname]})|#{@@regex[:integer]}|#{@@regex[:literal]}})
+
+  def next_token
+    @token = nil  
+    white_space = 0
+    new_line = 0
+    while @curpos < @source.length && @source[@curpos..@curpos] =~ /\s/ do
+      if @source[@curpos..@curpos] =~ /\n/
+        new_line = new_line + 1
+        @line = @line + 1
+        @col = 0
+      else
+        @col = @col + 1
+      end   
+      @curpos = @curpos + 1
+      white_space = white_space + 1
+    end
+    
+    # skip comments delimited by (:  :)
+    # comments can be nested
+    # these are XPath 2.0 comments
+    #
+
+    if @curpos < @source.length && @source[@curpos..@curpos+1] == '(:'
+      comment_depth = 1
+      @curpos = @curpos + 2
+      @col = @col + 2
+      while comment_depth > 0 && @curpos < @source.length
+        if @source[@curpos..@curpos+1] == '(:'
+          comment_depth = comment_depth + 1
+          @curpos = @curpos + 1
+          @col = @col + 1
+        end
+        if @source[@curpos..@curpos+1] == ':)'
+          comment_depth = comment_depth - 1
+          @curpos = @curpos + 1
+          @col = @col + 1
+        end
+        @curpos = @curpos + 1
+        @col = @col + 1
+      end
+      white_space = white_space + 1
+    end
+    
+    while @curpos < @source.length && @source[@curpos..@curpos] =~ /\s/ do
+      if @source[@curpos..@curpos] =~ /\n/
+        new_line = new_line + 1
+        @line = @line + 1
+        @col = 0
+      else
+        @col = @col + 1
+      end   
+      @curpos = @curpos + 1
+      white_space = white_space + 1
+    end
+    
+    if @curpos >= @source.length
+      @last_token = nil
+      return [ false, false ]
+    end
+
+    res = @@regex[:simple_tokens].match(@source[@curpos..@source.length-1])
+    if !res.nil?
+      if !res[1].nil?  
+        @token = [ @@ops[res[1]], res[1] ]
+      end
+    end
+  
+    if @token.nil?
+      res = @@regex[:general].match(@source[@curpos..@source.length-1])
+      if res.nil?
+        raise "Failed to parse '#{@source}' at #{@curpos}': #{@source[@curpos..@source.length-1]}"
+      end
+  #ncname, integer, literal
+      if !res[1].nil?
+        @token = [:NCNAME, res[1].to_s]
+      elsif !res[2].nil?
+        @token = [:INTEGER, res[2].to_s]
+      elsif !res[3].nil?
+        @token = [:LITERAL, res[3].to_s]
+        @token[1] = @token[1][1..@token[1].size-2]
+        @col += 2
+        @curpos += 2
+      end
+    end
+
+
+    if @token.nil?
+      puts "Uh oh... we don't know what to do: #{@source[@curpos .. @source.length-1]}"
+      return [ nil, nil ]
+    else
+      @curpos += @token[1].length
+      @col += @token[1].length
+    end
+
+    if !@token.nil? && @token[0] == :LP
+       # shorthand: if we see '(s[ )]', '(s?[ )]', '(?)', '(\d', then we have
+       if @curpos > 1 && ![' ', '('].include?(@source[@curpos-2 .. @curpos-2])
+         @token[0] = :LLP
+         @in_quantifier = true
+       end
+    elsif @in_quantifier
+      @in_quantifier = false
+      if @token[0] == :NCNAME
+        @token[0] = case @token[1]
+          when 's': :S
+          else :NCNAME
+        end
+      end
+    end
+
+    if @token[0] == :LB
+      @in_directive = true
+      @past_directive = false
+    elsif @in_directive && @token[0] == :NCNAME
+      if !@past_directive
+        @token[0] = @token[1].to_sym
+        @past_directive = true
+      end
+    end
+
+    #puts "token: #{@token.join(' => ')}"
+    return @token
+  end
