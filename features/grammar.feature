@@ -142,13 +142,15 @@ Feature: Basic regex parsing
      And "or" should match "a1bcde"
      And "or" should match "a1bb2ccde"
      And "or" should match "a1bwb2ccde"
+     And "or" should not parse "a1bwb2ccde"
      And "or" should match "acbwb2ccde"
+     And "or" should not parse "acbwb2ccde"
      And "or" should not match "acbwb2d"
-     And "ooor" should match "a1c,b2df"
+     And "ooor" should parse "a1c,b2df"
      And the expression (d) should equal ['f']
      And the expression (other[1]/b) should equal ['1']
      And the expression (other[2]/b) should equal ['2']
-     And "ooor" should not match "a1c,b2d"
+     And "ooor" should not parse "a1c,b2d"
 
   @mode
   Scenario: Parsing a grammar xml definition
@@ -165,8 +167,8 @@ Feature: Basic regex parsing
           </g:rule>
         </g:grammar>
       """
-    Then "something" should match "a0A"
-     And "something" should not match "a0a"
+    Then "something" should parse "a0A"
+     And "something" should not parse "a0a"
 
   @context
   Scenario: Parsing a grammar xml definition

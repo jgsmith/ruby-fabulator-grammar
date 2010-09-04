@@ -26,13 +26,15 @@ module Fabulator
             else
               rr[nom] = r
             end
-            rr.each_pair do |k,v|
-              if results[k].nil?
-                results[k] = v
-              elsif results[k].is_a?(Array)
-                results[k] << v
-              else
-                results[k] = [ results[k], v ]
+            if rr.is_a?(Hash)
+              rr.each_pair do |k,v|
+                if results[k].nil?
+                  results[k] = v
+                elsif results[k].is_a?(Array)
+                  results[k] << v
+                else
+                  results[k] = [ results[k], v ]
+                end
               end
             end
           end

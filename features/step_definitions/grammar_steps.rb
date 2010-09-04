@@ -35,6 +35,12 @@ Then /^it should not match "(.*)"$/ do |str|
 end
 
 Then /^"(.*)" should match "(.*)"$/ do |nom, str|
+  ret = @grammar.match(@context, nom, str)
+#  puts YAML::dump(ret)
+  ret.should == true
+end
+
+Then /^"(.*)" should parse "(.*)"$/ do |nom, str|
   ret = @grammar.parse(@context, nom, str)
 #  puts YAML::dump(ret)
   ret.should_not == nil
@@ -47,6 +53,10 @@ Then /^"(.*)" should match "(.*)"$/ do |nom, str|
   end
 end
 
-Then /^"(.*)" should not match "(.*)"$/ do |nom, str|
+Then /^"(.*)" should not parse "(.*)"$/ do |nom, str|
   @grammar.parse(@context, nom, str).should == nil
+end
+
+Then /^"(.*)" should not match "(.*)"$/ do |nom, str|
+  @grammar.match(@context, nom, str).should == false
 end
