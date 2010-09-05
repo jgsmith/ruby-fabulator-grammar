@@ -52,6 +52,7 @@ module Fabulator
       cursor = Fabulator::Grammar::Cursor.new(self, ctx, s)
       cursor.anchored = true
       ret = do_parse(nom, cursor)
+      cursor.do_skip
       cursor.eof ? ret : nil
     end
 

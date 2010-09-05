@@ -7,11 +7,8 @@ module Fabulator
         end
 
         def add_sequence(s)
-          @sequences << s
-        end
-
-        def add_directive(m)
-          @sequences << m if !m.nil? && m != ''
+          s = [ s ] unless s.is_a?(Array)
+          @sequences += s
         end
 
         def parse(source)
@@ -23,10 +20,12 @@ module Fabulator
             rr = { }
             if nom.nil?
               rr = r
-            else
-              rr[nom] = r
+            elsif !r.nil?
+              if !(r.is_a?(Hash) || r.is_a?(Array)) || !r.empty?
+                rr[nom] = r
+              end
             end
-            if rr.is_a?(Hash)
+            if rr.is_a?(Hash) && !rr.empty?
               rr.each_pair do |k,v|
                 if results[k].nil?
                   results[k] = v

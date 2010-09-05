@@ -23,6 +23,13 @@ module Fabulator
           @c_matches.parse(cursor)
         end
 
+        def score(context, data)
+          return 0 if @score.nil?
+          ctx = context.with_root(context.root.anon_node(nil))
+          ctx.merge_data(data)
+          (@score.run(ctx).value rescue 0)
+        end
+
         def run(context)
           @actions.run(context)
         end

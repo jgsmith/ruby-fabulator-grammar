@@ -8,17 +8,22 @@ rule
        | rules PIPE rule { result = val[0]; result.add_alternative(val[2]) }
 
   rule: { result = Fabulator::Grammar::Expr::RuleAlternative.new; }
-      | rule directive sequence { result = val[0]; result.add_directive(val[1]); result.add_sequence(val[2]); }
+      | rule rule_bit { result = val[0]; result.add_sequence(val[1]) }
 
-  directive:
-      | LC NCNAME RC { result = Fabulator::Grammar::Expr::RuleMode.new(val[1]) }
-      | LB commit RB
-      | LB uncommit RB
-      | LB reject RB
-      | LB skip NCNAME RB
-      | LB skip RB
-      | LB resync NCNAME RB
-      | LB resync RB
+  rule_bit: directives
+      | sequence
+
+  directives: directive { result = [ val[0] ] }
+      | directives directive { result = val[0] + [ val[1] ] }
+
+  directive: LC NCNAME RC { result = Fabulator::Grammar::Expr::RuleMode.new(val[1]) }
+      | LB COMMIT RB
+      | LB UNCOMMIT RB
+      | LB REJECT RB
+      | LB SKIP opt_separator RB { result = Fabulator::Grammar::Expr::SetSkip.new(val[2]) }
+      | LB RESYNC opt_separator RB { result = Fabulator::Grammar::Expr::Resync.new(val[2]) }
+      | DOT_DOT_DOT sequence { result = Fabulator::Grammar::Expr::LookAhead.new(val[1]) }
+      | DOT_DOT_DOT_BANG sequence { result = Fabulator::Grammar::Expr::NegLookAhead.new(val[1]) }
 
   sequence: atom sequence_qualifiers { result = Fabulator::Grammar::Expr::RuleSequence.new(nil, val[0], val[1]) }
           | atom { result = Fabulator::Grammar::Expr::RuleSequence.new(nil, val[0]) }
@@ -82,6 +87,8 @@ rule
     '?'  => :QUESTION,
     '.'  => :DOT,
     '..' => :DOT_DOT,
+    '...'=> :DOT_DOT_DOT,
+    '...!'=> :DOT_DOT_DOT_BANG,
     '|'  => :PIPE,
     ','  => :COMMA,
     ':'  => :COLON
@@ -207,14 +214,11 @@ rule
 
     if @token[0] == :LB
       @in_directive = true
-      @past_directive = false
     elsif @in_directive && @token[0] == :NCNAME
-      if !@past_directive
-        @token[0] = @token[1].to_sym
-        @past_directive = true
-      end
+      @token[0] = @token[1].upcase.to_sym
+      @in_directive = false
     end
 
-    #puts "token: #{@token.join(' => ')}"
+  #  puts "token: #{@token.join(' => ')}"
     return @token
   end

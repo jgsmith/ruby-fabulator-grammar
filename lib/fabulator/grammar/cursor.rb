@@ -1,7 +1,7 @@
 module Fabulator
   module Grammar
     class Cursor
-      attr_accessor :mode
+      attr_accessor :mode, :skip
 
       def initialize(g,ctx,s)
         @source = s
@@ -12,11 +12,16 @@ module Fabulator
         @col = 0
         @anchored = false
         @mode = :default
+        @skip = nil
         @context = ctx.with_root(ctx.root.anon_node(nil))
       end
 
       def context
         @context
+      end
+
+      def pos
+        @curpos
       end
 
       def resync(pat)
@@ -46,7 +51,7 @@ module Fabulator
       end
 
       def point
-        { :curpos => @curpos, :line => @line, :col => @col, :root => @context.root, :mode => @mode, :anchored => @anchored }
+        { :curpos => @curpos, :line => @line, :col => @col, :root => @context.root, :mode => @mode, :anchored => @anchored, :skip => @skip }
       end
 
       def point=(p)
@@ -55,6 +60,7 @@ module Fabulator
         @col = p[:col]
         @mode = p[:mode]
         @anchored = p[:anchored]
+        @skip = p[:skip]
         @context.root = p[:root]
       end
 
@@ -81,8 +87,26 @@ module Fabulator
         @context
       end
 
+      def do_skip
+        if !@skip.nil?
+          my_skip = @skip
+          new_pos = @curpos
+          self.attempt do |cursor|
+            cursor.skip = nil
+            cursor.anchored
+            r = my_skip.parse(cursor)
+            while !r.nil?
+              r = my_skip.parse(cursor)
+            end
+            new_pos = cursor.pos
+          end
+          @curpos = new_pos
+        end
+      end
+
       def match_token(regex)
         res = nil
+        do_skip
         if @source[@curpos .. @end] =~ %r{^(#{regex})}
           res = $1.to_s
           @curpos += res.length

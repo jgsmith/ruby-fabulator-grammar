@@ -42,7 +42,7 @@ end
 
 Then /^"(.*)" should parse "(.*)"$/ do |nom, str|
   ret = @grammar.parse(@context, nom, str)
-#  puts YAML::dump(ret)
+  #puts YAML::dump(ret)
   ret.should_not == nil
 
   @context.root = @context.root.anon_node(nil)
