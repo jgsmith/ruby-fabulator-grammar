@@ -16,7 +16,7 @@ rule
   directives: directive { result = [ val[0] ] }
       | directives directive { result = val[0] + [ val[1] ] }
 
-  directive: LC NCNAME RC { result = Fabulator::Grammar::Expr::RuleMode.new(val[1]) }
+  directive: LB MODE NCNAME RB { result = Fabulator::Grammar::Expr::RuleMode.new(val[2]) }
       | LB COMMIT RB
       | LB UNCOMMIT RB
       | LB REJECT RB
@@ -24,6 +24,10 @@ rule
       | LB RESYNC opt_separator RB { result = Fabulator::Grammar::Expr::Resync.new(val[2]) }
       | DOT_DOT_DOT sequence { result = Fabulator::Grammar::Expr::LookAhead.new(val[1]) }
       | DOT_DOT_DOT_BANG sequence { result = Fabulator::Grammar::Expr::NegLookAhead.new(val[1]) }
+      | CARET { result = Fabulator::Grammar::Expr::Anchor.new(:start_of_line) }
+      | CARET_CARET { result = Fabulator::Grammar::Expr::Anchor.new(:start_of_string) }
+      | DOLLAR { result = Fabulator::Grammar::Expr::Anchor.new(:end_of_line) }
+      | DOLLAR_DOLLAR { result = Fabulator::Grammar::Expr::Anchor.new(:end_of_string) }
 
   sequence: atom sequence_qualifiers { result = Fabulator::Grammar::Expr::RuleSequence.new(nil, val[0], val[1]) }
           | atom { result = Fabulator::Grammar::Expr::RuleSequence.new(nil, val[0]) }
@@ -91,7 +95,11 @@ rule
     '...!'=> :DOT_DOT_DOT_BANG,
     '|'  => :PIPE,
     ','  => :COMMA,
-    ':'  => :COLON
+    ':'  => :COLON,
+    '^'  => :CARET,
+    '^^' => :CARET_CARET,
+    '$'  => :DOLLAR,
+    '$$' => :DOLLAR_DOLLAR,
   }
 
   @@regex = {

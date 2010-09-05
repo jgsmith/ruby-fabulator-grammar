@@ -15,6 +15,7 @@ require 'fabulator/grammar/expr/rule'
 require 'fabulator/grammar/expr/rule_mode'
 require 'fabulator/grammar/expr/rule_alternative'
 require 'fabulator/grammar/expr/rule_sequence'
+require 'fabulator/grammar/expr/anchor'
 
 module Fabulator
   module Grammar

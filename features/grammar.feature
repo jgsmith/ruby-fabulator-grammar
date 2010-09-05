@@ -163,7 +163,7 @@ Feature: Basic regex parsing
           <g:token g:name="LETTER" g:matches="[:upper:]" g:mode="upper"/>
           <g:token g:name="LETTER" g:matches="[:lower:]" g:mode="lower"/>
           <g:rule g:name="something">
-            <g:when g:matches="{normal} LETTER NUMBER {upper} LETTER" />
+            <g:when g:matches="[mode normal] LETTER NUMBER [mode upper] LETTER" />
           </g:rule>
         </g:grammar>
       """
@@ -183,9 +183,10 @@ Feature: Basic regex parsing
           <g:token g:name="LETTER" g:matches="[:upper:]" g:mode="upper"/>
           <g:token g:name="LETTER" g:matches="[:lower:]" g:mode="lower"/>
           <g:rule g:name="something">
-            <g:when g:matches="{normal} LETTER NUMBER {upper} LETTER" />
+            <g:when g:matches="^^[mode normal] LETTER NUMBER [mode upper] LETTER" />
           </g:rule>
         </g:grammar>
       """
     Then "something" should match "a0A"
      And "something" should not match "a0a"
+     And "something" should not match "aa0A"
