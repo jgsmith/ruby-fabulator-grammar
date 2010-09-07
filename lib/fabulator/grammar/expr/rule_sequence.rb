@@ -19,8 +19,8 @@ module Fabulator
           end
 
           case @quantifier.first
-            when '?': return @atom.parse(source) || { }
-            when 's': 
+            when '?'.to_sym: return @atom.parse(source) || { }
+            when :s: 
               ret = [ ]
               r = @atom.parse(source)
               while !r.nil?
@@ -35,7 +35,7 @@ module Fabulator
                 end
               end
               return ret.empty? ? nil : ret
-            when 's?':
+            when 's?'.to_sym:
               ret = [ ]
               r = @atom.parse(source)
               while !r.nil?

@@ -183,7 +183,7 @@ Feature: Basic regex parsing
           <g:token g:name="LETTER" g:matches="[:upper:]" g:mode="upper"/>
           <g:token g:name="LETTER" g:matches="[:lower:]" g:mode="lower"/>
           <g:rule g:name="something">
-            <g:when g:matches="^^[mode normal] LETTER NUMBER [mode upper] LETTER" />
+            <g:when g:matches="^^ [mode normal] LETTER NUMBER [mode upper] LETTER" />
           </g:rule>
         </g:grammar>
       """

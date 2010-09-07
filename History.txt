@@ -1,3 +1,13 @@
+=== 0.0.3 2010-09-07
+
+* 5 major enhancements:
+  * structural elements in place for writing grammars
+  * limited rule matching support
+  * use [,] for repetition counts
+  * character set algrebra supported
+  * pre-defined character sets
+  * requires Fabulator 0.0.7 or higher
+
 === 0.0.2 2010-08-19
 
 * 3 minor enhancements:

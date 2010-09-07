@@ -16,12 +16,12 @@ rule
   directives: directive { result = [ val[0] ] }
       | directives directive { result = val[0] + [ val[1] ] }
 
-  directive: LB MODE NCNAME RB { result = Fabulator::Grammar::Expr::RuleMode.new(val[2]) }
-      | LB COMMIT RB
-      | LB UNCOMMIT RB
-      | LB REJECT RB
-      | LB SKIP opt_separator RB { result = Fabulator::Grammar::Expr::SetSkip.new(val[2]) }
-      | LB RESYNC opt_separator RB { result = Fabulator::Grammar::Expr::Resync.new(val[2]) }
+  directive: LLB MODE NCNAME RB { result = Fabulator::Grammar::Expr::RuleMode.new(val[2]) }
+      | LLB COMMIT RB
+      | LLB UNCOMMIT RB
+      | LLB REJECT RB
+      | LLB SKIP opt_separator RB { result = Fabulator::Grammar::Expr::SetSkip.new(val[2]) }
+      | LLB RESYNC opt_separator RB { result = Fabulator::Grammar::Expr::Resync.new(val[2]) }
       | DOT_DOT_DOT sequence { result = Fabulator::Grammar::Expr::LookAhead.new(val[1]) }
       | DOT_DOT_DOT_BANG sequence { result = Fabulator::Grammar::Expr::NegLookAhead.new(val[1]) }
       | CARET { result = Fabulator::Grammar::Expr::Anchor.new(:start_of_line) }
@@ -42,20 +42,33 @@ rule
   # the ncname specifies a token that separates instances
   # shorthand: if we see '(s[ )]', '(s?[ )]', '(?)', '(\d', then we have
   # something for the following instead of LP rules RP
-  sequence_qualifiers: LLP QUESTION RP { result = [ '?' ] }
-          | LLP S opt_separator RP { result = [ 's', val[2] ] }
-          | LLP S QUESTION opt_separator RP { result = [ 's?', val[3] ] }
-          | LLP INTEGER opt_separator RP { result = [ 'count', val[1], val[2] ] }
-          | LLP INTEGER DOT_DOT INTEGER opt_separator RP { result = [ 'range', [ val[1], val[3] ], val[4] ] }
-          | LLP DOT_DOT INTEGER opt_separator RP { result = [ 'upto', val[2], val[3] ] }
-          | LLP INTEGER DOT_DOT opt_separator RP { result = [ 'atleast', val[1],val[3] ] }
+  sequence_qualifiers: LLP QUESTION RP { result = [ '?'.to_sym ] }
+          | LLP S opt_separator RP { result = [ :s, val[2] ] }
+          | LLP S QUESTION opt_separator RP { result = [ 's?'.to_sym, val[3] ] }
+          | LLP INTEGER opt_separator RP { result = [ :count, val[1], val[2] ] }
+          | LLP INTEGER DOT_DOT INTEGER opt_separator RP { result = [ :range, [ val[1], val[3] ], val[4] ] }
+          | LLP DOT_DOT INTEGER opt_separator RP { result = [ :upto, val[2], val[3] ] }
+          | LLP INTEGER DOT_DOT opt_separator RP { result = [ :atleast, val[1],val[3] ] }
 
   opt_separator:
       | atom
 
   atom: LITERAL { result = Fabulator::Grammar::Expr::Text.new(val[0]) }
       | LP rules RP { result = val[1] }
-      | NCNAME { result = Fabulator::Grammar::Expr::RuleRef.new(val[0]) }
+      | NCNAME opt_params { result = Fabulator::Grammar::Expr::RuleRef.new(val[0]) }
+
+  opt_params:
+      | LB params RB
+
+  params: param
+      | params COMMA param
+      | params COMMA
+
+  param: hypothetical relative_path
+      | hypothetical LITERAL
+
+  relative_path: NCNAME
+      | NCNAME SLASH NCNAME
 
 
 ---- inner
@@ -100,6 +113,7 @@ rule
     '^^' => :CARET_CARET,
     '$'  => :DOLLAR,
     '$$' => :DOLLAR_DOLLAR,
+    '/'  => :SLASH,
   }
 
   @@regex = {
@@ -220,8 +234,11 @@ rule
       end
     end
 
-    if @token[0] == :LB
-      @in_directive = true
+    if !@token.nil? && @token[0] == :LB
+      if @curpos == 1 || @source[@curpos-2 .. @curpos - 2] == ' '
+        @token[0] = :LLB
+        @in_directive = true
+      end
     elsif @in_directive && @token[0] == :NCNAME
       @token[0] = @token[1].upcase.to_sym
       @in_directive = false
