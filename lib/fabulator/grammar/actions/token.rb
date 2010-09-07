@@ -13,18 +13,9 @@ module Fabulator
           super
 
           parser = Fabulator::Grammar::TokenParser.new
+
           # parse @matches
-          @c_matches = parser.parse(@matches)
-          self
-        end
-
-
-        def mode
-          @mode.to_sym
-        end
-
-        def name
-          @name
+          @c_matches = parser.parse(self.matches)
         end
 
         def parse(cursor)

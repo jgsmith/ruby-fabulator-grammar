@@ -14,9 +14,9 @@ module Fabulator
           super
 
           parser = Fabulator::Grammar::RuleParser.new
+
           # parse @matches
-          @c_matches = parser.parse(@matches)
-          self
+          @c_matches = parser.parse(self.matches)
         end
 
         def parse(cursor)
@@ -27,11 +27,7 @@ module Fabulator
           return 0 if @score.nil?
           ctx = context.with_root(context.root.anon_node(nil))
           ctx.merge_data(data)
-          (@score.run(ctx).value rescue 0)
-        end
-
-        def run(context)
-          @actions.run(context)
+          (self.score(ctx).value rescue 0)
         end
       end
     end

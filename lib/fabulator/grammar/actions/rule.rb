@@ -17,20 +17,6 @@ module Fabulator
           @choices = [ ]
         end
 
-        def compile_xml(xml, ctx)
-          super
-
-          self
-        end
-
-        def mode
-          @mode.to_sym
-        end
-
-        def name
-          @name
-        end
-
         def parse(cursor)
           # try each when...
           best_attempt = nil
