@@ -21,7 +21,6 @@ module Fabulator
               }
               if !ret.nil?
                 s.set_result(ret)
-#                s.name_result(@name)
                 return
               end
             end
@@ -36,7 +35,6 @@ module Fabulator
                 if !ret.nil?
                   s.start = start
                   s.set_result(ret)
-#                  s.name_result(@name)
                   return
                 end
               end
