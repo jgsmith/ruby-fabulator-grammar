@@ -12,32 +12,27 @@ module Fabulator
         end
 
         def parse(source)
-          results = { }
+          results = [ ]
           @sequences.each do |sequence|
-            r = sequence.parse(source)
-            return nil if r.nil? # we fail
-            nom = (sequence.name rescue nil)
-            rr = { }
-            if nom.nil?
-              rr = r
-            elsif !r.nil?
-              if !(r.is_a?(Hash) || r.is_a?(Array)) || !r.empty?
-                rr[nom] = r
+            res = source.attempt{ |s| sequence.parse(s) }
+            raise Fabulator::Grammar::RejectParse if res.nil?
+            res.children.each do |c|
+              if c.name.nil?
+                c.name = sequence.name if c.name.nil? && !sequence.name.nil?
+                res.prune(c)
+                results << c if !c.children.empty? || !c.value.nil?
               end
             end
-            if rr.is_a?(Hash) && !rr.empty?
-              rr.each_pair do |k,v|
-                if results[k].nil?
-                  results[k] = v
-                elsif results[k].is_a?(Array)
-                  results[k] << v
-                else
-                  results[k] = [ results[k], v ]
-                end
-              end
-            end
+            res.name = sequence.name unless sequence.name.nil?
+            results << res if !res.children.empty? || !res.value.nil?
           end
-          results
+          # now we want to merge all of the results
+          if results.size > 1
+            results = results.select{ |r| !r.name.nil? }
+          end
+          if !results.empty?
+            source.set_result(results)
+          end
         end
       end
     end

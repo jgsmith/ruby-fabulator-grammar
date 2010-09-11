@@ -7,6 +7,7 @@ module Fabulator
   require 'fabulator/grammar/actions/rule'
   require 'fabulator/grammar/actions/token'
   require 'fabulator/grammar/actions/when'
+  require 'fabulator/grammar/actions/result'
 
   module Grammar
     module Actions
@@ -19,7 +20,7 @@ module Fabulator
         structural 'token', Token
         structural 'when', When
 
-#        action 'result', Result
+        action 'result', Result
 
         ## reference a grammar name
         function 'match' do |ctx, args|

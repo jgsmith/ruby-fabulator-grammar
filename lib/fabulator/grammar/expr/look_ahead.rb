@@ -11,12 +11,12 @@ module Fabulator
         end
 
         def parse(source)
-          ret = nil
+          ret = false
           source.attempt do |c|
             ret = @sequence.parse(c)
-            nil
+            raise Fabulator::Grammar::RejectParse
           end
-          ret.nil? ? nil : {}
+          raise Fabulator::Grammar::RejectParse unless ret
         end
       end
 
@@ -30,12 +30,12 @@ module Fabulator
         end
  
         def parse(source)
-          ret = nil
+          ret = false
           source.attempt do |c|
             ret = @sequence.parse(c)
-            nil
+            raise Fabulator::Grammar::RejectParse
           end
-          ret.nil? ? {} : nil
+          raise Fabulator::Grammar::RejectParse if ret
         end
       end
 

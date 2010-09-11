@@ -8,7 +8,6 @@ module Fabulator
 
         def parse(cursor)
           cursor.skip = @skip
-          {}
         end
       end
     end

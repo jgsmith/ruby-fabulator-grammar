@@ -16,9 +16,13 @@ module Fabulator::Grammar::Expr
 
     def parse(cursor)
       rule = cursor.find_rule(@name)
-      return nil if rule.nil?
+      raise Fabulator::Grammar::RejectParse if rule.nil?
       # we have @name as the path prefix for this part?
-      cursor.attempt { |c| rule.parse(c) }
+      ret = cursor.attempt { |c| rule.parse(c) }
+
+      raise Fabulator::Grammar::RejectParse if ret.nil?
+
+      cursor.set_result(ret)
     end
   end
 end

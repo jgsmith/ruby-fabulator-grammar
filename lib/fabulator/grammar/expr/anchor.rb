@@ -11,16 +11,16 @@ module Fabulator
         end
 
         def parse(source)
-          ret = nil
+          ret = false
           case @anchor
             when :start_of_string: 
-              ret = source.pos == 0 ? {} : nil
+              ret = source.pos == 0
             when :start_of_line:
             when :end_of_string:
-              ret = source.eof ? {} : nil
+              ret = source.eof?
             when :end_of_line:
           end
-          ret
+          raise Fabulator::Grammar::RejectParse unless ret
         end
       end
     end

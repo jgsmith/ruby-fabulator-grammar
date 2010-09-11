@@ -6,9 +6,12 @@ module Fabulator
           @mode = m
         end
 
+        def name
+          nil
+        end
+
         def parse(s)
           s.mode = @mode
-          {}
         end
       end
     end

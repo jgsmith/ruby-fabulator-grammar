@@ -15,12 +15,7 @@ module Fabulator::Grammar::Expr
     end
 
     def parse(cursor)
-      res = cursor.match_token(self.to_regex)
-      if res.nil?
-        return nil
-      else
-        return res
-      end
+      cursor.match_token(self.to_regex)
     end
   end
 end

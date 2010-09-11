@@ -21,5 +21,7 @@ module Fabulator
   module Grammar
     class ParserError < StandardError
     end
+    class RejectParse < StandardError
+    end
   end
 end

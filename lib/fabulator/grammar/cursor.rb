@@ -1,11 +1,12 @@
 module Fabulator
   module Grammar
     class Cursor
-      attr_accessor :mode, :skip
+      attr_accessor :mode, :skip, :start
 
       def initialize(g,ctx,s)
         @source = s
         @grammar = g
+        @start = 0
         @curpos = 0
         @end = @source.length-1
         @line = 0
@@ -14,6 +15,8 @@ module Fabulator
         @mode = :default
         @skip = nil
         @context = ctx.with_root(ctx.root.anon_node(nil))
+        @context.root.roots['result'] = @context.root
+        @context.root.axis = 'result'
       end
 
       def context
@@ -30,7 +33,7 @@ module Fabulator
         end
       end
 
-      def eof
+      def eof?
         @curpos > @end
       end
 
@@ -51,7 +54,10 @@ module Fabulator
       end
 
       def point
-        { :curpos => @curpos, :line => @line, :col => @col, :root => @context.root, :mode => @mode, :anchored => @anchored, :skip => @skip }
+        r = { :curpos => @curpos, :line => @line, :col => @col, :root => @context.root, :mode => @mode, :anchored => @anchored, :skip => @skip, :result => @context.root.roots['result'] }
+        @context.root.roots['result'] = r[:result].anon_node(nil)
+        @context.root = @context.root.roots['result']
+        r
       end
 
       def point=(p)
@@ -62,17 +68,61 @@ module Fabulator
         @anchored = p[:anchored]
         @skip = p[:skip]
         @context.root = p[:root]
+        @context.root.roots['result'] = p[:result]
       end
 
       def attempt(&block)
         saved = self.point
-        ret = yield self
-        if ret.nil?
+        begin
+          yield self
+        rescue Fabulator::Grammar::RejectParse
           self.point = saved
           return nil
         end
-        
+
+        ret = @context.root.roots['result']
+        @context.root = saved[:root]
+        @context.root.roots['result'] = saved[:result]
         return ret
+      end
+
+      def set_result(r)
+        r = [ r ] unless r.is_a?(Array)
+        if r.size > 1
+          @context.root = @context.root.anon_node(nil)
+          r.each { |rr| @context.root.add_child(rr) }
+        elsif !r.empty?
+          @context.root = r.first
+        end
+        @context.root.roots['result'] = @context.root
+      end
+
+      def name_result(nom = nil)
+        return if nom.nil?
+        return if @context.root.value.nil? && @context.root.children.empty?
+        if @context.root.value.nil?
+          @context.root.name = nom
+        else
+          if @context.root.name.nil?
+            @context.root.name = nom
+          else
+            n = @context.root.anon_node(nil)
+            n.name = nom
+            n.add_child(@context.root)
+            @context.root = n
+            @context.root.roots['result'] = @context.root
+          end
+        end
+      end
+
+      def rename_result(nom = nil)
+        return if nom.nil?
+        return if @context.root.value.nil? && @context.root.children.empty?
+#        if @context.root.children.select{ |c| !c.name.nil? }.empty?
+#          @context.root.children.each { |c| c.name = nom }
+#        else
+          @context.root.name = nom
+#        end
       end
 
       def find_rule(nom)
@@ -105,13 +155,13 @@ module Fabulator
       end
 
       def match_token(regex)
-        res = nil
         do_skip
         if @source[@curpos .. @end] =~ %r{^(#{regex})}
-          res = $1.to_s
-          @curpos += res.length
+          @context.root.value = $1.to_s
+          @curpos += @context.root.value.length
+        else
+          raise Fabulator::Grammar::RejectParse
         end
-        res
       end
     end
   end

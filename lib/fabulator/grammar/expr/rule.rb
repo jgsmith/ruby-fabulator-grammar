@@ -19,21 +19,31 @@ module Fabulator
                 cursor.anchored = true 
                 alternative.parse(cursor) 
               }
-              return ret unless ret.nil?
+              if !ret.nil?
+                s.set_result(ret)
+#                s.name_result(@name)
+                return
+              end
             end
           else
-            while !s.eof
+            while !s.eof?
+              start = s.pos
               @alternatives.each do |alternative|
                 ret = s.attempt { |cursor| 
                   cursor.anchored = true 
                   alternative.parse(cursor) 
                 }
-                return ret unless ret.nil?
+                if !ret.nil?
+                  s.start = start
+                  s.set_result(ret)
+#                  s.name_result(@name)
+                  return
+                end
               end
               s.advance_position(1)
             end
           end
-          return nil
+          raise Fabulator::Grammar::RejectParse
         end
       end
     end

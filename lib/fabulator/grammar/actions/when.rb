@@ -25,9 +25,7 @@ module Fabulator
 
         def score(context, data)
           return 0 if @score.nil?
-          ctx = context.with_root(context.root.anon_node(nil))
-          ctx.merge_data(data)
-          (self.score(ctx).value rescue 0)
+          (@score.run(context.with_root(context.root.roots['result'])).value rescue 0)
         end
       end
     end
