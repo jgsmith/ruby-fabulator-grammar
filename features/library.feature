@@ -65,6 +65,15 @@ Feature: Grammars embedded in libraries
               </g:when>
             </g:rule>
           </g:grammar>
+          <l:mapping l:name="double">
+            <f:value-of f:select=". * 2" />
+          </l:mapping>
+          <l:function l:name="fctn">
+            <f:value-of f:select="$1 - $2" />
+          </l:function>
+          <l:action l:name="actn" l:has-actions="true">
+            <f:value-of f:select="f:eval($actions) * 3" />
+          </l:action>
         </l:library>
       """
      And the statemachine
@@ -80,6 +89,10 @@ Feature: Grammars embedded in libraries
                   <f:value>a0A</f:value>
                 </f:param>
               </f:params>
+              <f:value f:path="barbell" f:select="m:double(3)" />
+              <f:value f:path="barboil">
+                <m:actn><f:value-of f:select="7" /></m:actn>
+              </f:value>
             </f:goes-to>
           </f:view>
           <f:view f:name="step1">
@@ -106,6 +119,8 @@ Feature: Grammars embedded in libraries
       | foo   | bara0Aque   |
     Then it should be in the 'step1' state
      And the expression (/foo) should equal ['a0A']
+     And the expression (/barbell) should equal [6]
+     And the expression (/barboil) should equal [21]
     When I run it with the following params:
       | key   | value |   
       | bar   | a0a   |
@@ -115,3 +130,4 @@ Feature: Grammars embedded in libraries
       | bar   | a0B   |
     Then it should be in the 'stop' state
      And the expression (/bar) should equal ['a0B']
+     And the expression (m:fctn(3,2)) should equal [1]
