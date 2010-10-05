@@ -1,9 +1,9 @@
 Given /the grammar/ do |doc_xml|
   @context ||= Fabulator::Expr::Context.new
+  @compiler ||= Fabulator::Compiler.new
 
   if @grammar.nil?
-    @grammar = Fabulator::Grammar::Actions::Grammar.new
-    @grammar.compile_xml(doc_xml, @context)
+    @grammar = @compiler.compile(doc_xml)
   else
     @grammar.compile_xml(doc_xml, @context)
   end
@@ -13,10 +13,10 @@ end
 
 Given /the library/ do |doc_xml|
   @context ||= Fabulator::Expr::Context.new
+  @compiler ||= Fabulator::Compiler.new
 
   if @library.nil?
-    @library = Fabulator::Lib::Lib.new
-    @library.compile_xml(doc_xml, @context)
+    @library = @compiler.compile(doc_xml)
   else
     @library.compile_xml(doc_xml, @context)
   end
@@ -26,10 +26,10 @@ end
 
 Given /the statemachine/ do |doc_xml|
   @context ||= Fabulator::Expr::Context.new
+  @compiler ||= Fabulator::Compiler.new
 
   if @sm.nil?
-    @sm = Fabulator::Core::StateMachine.new
-    @sm.compile_xml(doc_xml)
+    @sm = @compiler.compile(doc_xml)
   else
     @sm.compile_xml(doc_xml)
   end
