@@ -7,7 +7,7 @@ begin
     gem.email = "jgsmith@tamu.edu"
     gem.homepage = "http://github.com/jgsmith/ruby-fabulator-grammar"
     gem.authors = ["James Smith"]
-    gem.add_dependency(%q<fabulator>, [">= 0.0.8"]) 
+    gem.add_dependency(%q<fabulator>, [">= 0.0.9"]) 
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
     # not sure how to add dependency of a library that's not a gem
     gem.requirements << 'bitset, 1.0 or greater'

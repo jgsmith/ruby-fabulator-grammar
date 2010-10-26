@@ -48,6 +48,7 @@ Feature: Grammars embedded in libraries
                    xmlns:g="http://dh.tamu.edu/ns/fabulator/grammar/1.0#"
                    xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#"
                    l:ns="http://example.com/ns/grammar"
+                   xmlns:my="http://example.com/ns/grammar"
         >
           <g:grammar>
             <g:context g:mode="normal">
@@ -74,6 +75,9 @@ Feature: Grammars embedded in libraries
           <l:action l:name="actn" l:has-actions="true">
             <f:value-of f:select="f:eval($actions) * 3" />
           </l:action>
+          <l:action l:name="actn2" l:has-actions="true">
+            <my:actn><f:value-of f:select="f:eval($actions) * 5" /></my:actn>
+          </l:action>
         </l:library>
       """
      And the statemachine
@@ -92,6 +96,9 @@ Feature: Grammars embedded in libraries
               <f:value f:path="barbell" f:select="m:double(3)" />
               <f:value f:path="barboil">
                 <m:actn><f:value-of f:select="7" /></m:actn>
+              </f:value>
+              <f:value f:path="barboil2">
+                <m:actn2><f:value-of f:select="7" /></m:actn2>
               </f:value>
             </f:goes-to>
           </f:view>
@@ -121,6 +128,7 @@ Feature: Grammars embedded in libraries
      And the expression (/foo) should equal ['a0A']
      And the expression (/barbell) should equal [6]
      And the expression (/barboil) should equal [21]
+     And the expression (/barboil2) should equal [105]
     When I run it with the following params:
       | key   | value |   
       | bar   | a0a   |
