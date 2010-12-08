@@ -30,6 +30,7 @@ module Fabulator::Grammar::Expr
           }
         end
       end
+      self.compute_regex
     end
 
     def set
@@ -38,20 +39,27 @@ module Fabulator::Grammar::Expr
 
     def or(c)
       @set = @set | c.set
+      self.compute_regex
       self
     end
 
     def but_not(c)
       @set = @set - c.set
+      self.compute_regex
       self
     end
 
 # for now, we restrict ourselves to 8-bit characters
     def universal
       @set.on(0..0xff)
+      self.compute_regex
     end
 
     def to_regex
+      @regex
+    end
+
+    def compute_regex
       # want a compact set of ranges for the regex
       set_def = ''
       @set.to_ary.each do |r|
@@ -62,9 +70,9 @@ module Fabulator::Grammar::Expr
         end
       end
       if set_def == ''
-        return %r{.}
+        @regex = %r{.}
       else
-        %r{[#{set_def}]}
+        @regex = %r{[#{set_def}]}
       end
     end
   end
@@ -89,6 +97,7 @@ module Fabulator::Grammar::Expr
 
     def initialize(cs)
       @set = BitSet.new.on(@@charsets[cs.downcase] || [])
+      self.compute_regex
     end
   end
 end

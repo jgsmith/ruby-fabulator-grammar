@@ -31,8 +31,8 @@ Feature: Grammars embedded in libraries
           </g:grammar>
         </l:library>
       """
-    Then the expression (m:something?('a0A')) should equal [f:true()]
-     And the expression (m:something?('a0a')) should equal [f:false()] 
+    Then the expression (m:something?('a0A')) should be true
+     And the expression (m:something?('a0a')) should be false
      And the expression (m:something('a0A')/NUMBER) should equal ['0']
      And the expression (m:something2('a0A')/foo) should equal ['0']
 
@@ -73,11 +73,31 @@ Feature: Grammars embedded in libraries
             <f:value-of f:select="$1 - $2" />
           </l:function>
           <l:action l:name="actn" l:has-actions="true">
+            <l:attribute l:name="foo" />
             <f:value-of f:select="f:eval($actions) * 3" />
           </l:action>
           <l:action l:name="actn2" l:has-actions="true">
             <my:actn><f:value-of f:select="f:eval($actions) * 5" /></my:actn>
           </l:action>
+          <l:action l:name="actn3">
+            <l:attribute l:name="path" l:eval="true" />
+            <f:value f:path="f:eval($path)" f:select="3" />
+          </l:action>
+          <l:action l:name="actn4">
+            <l:attribute l:name="foo" l:eval="false" />
+            <f:value f:path="/actn4foo" f:select="f:eval($foo)" />
+          </l:action>
+          <l:template l:name="tmpl">
+            Foo
+          </l:template>
+          <l:template l:name="tmpl2">
+            <f:value-of f:select="$1" />
+          </l:template>
+          <l:template l:name="tmpl3">
+            <p>
+            <f:value-of f:select="$1" />
+            </p>
+          </l:template>
         </l:library>
       """
      And the statemachine
@@ -85,6 +105,8 @@ Feature: Grammars embedded in libraries
         <f:application xmlns:f="http://dh.tamu.edu/ns/fabulator/1.0#"
                        xmlns:m="http://example.com/ns/grammar"
         >
+          <m:actn3 m:path="/actn3" />
+          <m:actn4 m:foo="bar" />
           <f:view f:name="start">
             <f:goes-to f:view="step1">
               <f:params>
@@ -116,6 +138,8 @@ Feature: Grammars embedded in libraries
         </f:application>
       """
     Then it should be in the 'start' state  
+     And the expression (/actn3) should equal [3]
+     And the expression (/actn4foo) should equal ['bar']
     When I run it with the following params:
       | key   | value         |
       | foo   | bar  a0a  que   |
@@ -139,3 +163,6 @@ Feature: Grammars embedded in libraries
     Then it should be in the 'stop' state
      And the expression (/bar) should equal ['a0B']
      And the expression (m:fctn(3,2)) should equal [1]
+     And the expression (f:normalize-space(m:tmpl())) should equal ['Foo']
+     And the expression (f:normalize-space(m:tmpl2('Foo'))) should equal ['Foo']
+     And the expression (f:normalize-space(m:tmpl3('Foo'))) should equal ['<p> Foo </p>']

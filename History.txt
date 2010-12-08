@@ -1,3 +1,9 @@
+=== 0.0.6 2010-12-08
+
+* 1 minor enhancement:
+  * Compute the regex for character sets/classes as they are built since
+    BitSet objects don't survive YAML serialization
+
 === 0.0.5 2010-10-26
 
 * 1 minor enhancement:

@@ -98,6 +98,14 @@ Then /the (expression \(.*\)) should equal (\[.*\])/ do |x, y|
   a.first.value.should == b.first.value
 end
 
+Then /the (expression \(.*\)) should be true/ do |x|
+  x.run(@context).first.value.should == true
+end
+
+Then /the (expression \(.*\)) should be false/ do |x|
+  x.run(@context).first.value.should == false
+end
+
 Then /the (expression \(.*\)) should be nil/ do |x|
   x.run(@context).first.should == nil
 end

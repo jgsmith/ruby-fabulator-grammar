@@ -73,7 +73,7 @@ module Fabulator
       nom.gsub!(/\?$/, '')
       ret = matching ? strings.collect{ |s| self.match(context, nom, s) } :
                        strings.collect{ |s| self.parse(context, nom, s) }
-      #ret -= [ nil ]
+      ret -= [ nil ]
       if matching
         ret = ret.collect{ |r| context.root.anon_node(!!r, [FAB_NS, 'boolean']) }
       else
