@@ -66,12 +66,8 @@ Feature: Grammars embedded in libraries
               </g:when>
             </g:rule>
           </g:grammar>
-          <l:mapping l:name="double">
-            <f:value-of f:select=". * 2" />
-          </l:mapping>
-          <l:function l:name="fctn">
-            <f:value-of f:select="$1 - $2" />
-          </l:function>
+          <l:mapping l:name="double" f:select=". * 2" />
+          <l:function l:name="fctn" f:select="$1 - $2" />
           <l:action l:name="actn" l:has-actions="true">
             <l:attribute l:name="foo" />
             <f:value-of f:select="f:eval($actions) * 3" />
